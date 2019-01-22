@@ -1,46 +1,29 @@
-function result = soib( PN )
-deltaN = 0.0175;
-deltaFo = 0.0175; 
-f = 229;
+function [OSNR, Q] = soib(PN, deltaN, deltaFo, f, P1, EX)
+if deltaN > deltaFo
+  deltaN = deltaFo
+end;
 step = 0.00001;
 B = [f-deltaN/2:step:f+deltaN/2];
 Bod = [f-deltaFo/2:step:f+deltaFo/2];
 Bextended = [f-deltaN:step:f+deltaN];
-P1 = 1;
-%PN = 0.1;
-S = 0.7; %A/W
-R = 100; %ohm
-EX = 50;
+P0 = P1/EX;
 noise_fun = @(x) PN*ones(1, length(x));
 
-signal = zeros(1, length(B));
-signal(int32(length(B)/2)) = P1;
+signal1 = zeros(1, length(B));
+signal1(int32(length(B)/2)) = P1;
+signal0 = zeros(1, length(B));
+signal0(int32(length(B)/2)) = P0;
 noise = noise_fun(B);
 
-%noisySignal = signal + noise;
-%semilogy(B, noisySignal, '*'); 
-asease = conv(noise, noise);
-asease_od = asease(find(abs(Bextended - (f-deltaFo/2)) < 0.000001):find(abs(Bextended - (f+deltaFo/2))<0.000001));
+left_filtered_freq = find(abs(Bextended - (f-deltaFo/2)) < 0.000001);
+right_filtered_freq = find(abs(Bextended - (f+deltaFo/2)) < 0.000001);
 
-signalase1 = conv(signal, noise);
+asease_od = conv(noise, noise)(left_filtered_freq:right_filtered_freq);
+signal1_od = conv(signal1, noise)(left_filtered_freq:right_filtered_freq);
+signal0_od = conv(signal0, noise)(left_filtered_freq:right_filtered_freq);
 
-signal_od = signalase1(find(abs(Bextended - (f-deltaFo/2)) < 0.000001):find(abs(Bextended - (f+deltaFo/2))<0.000001));
+sigma1 = sqrt(sum((signal1_od + asease_od).*step));
+sigma0 = sqrt(sum((signal0_od + asease_od).*step));
 
-
-I1 = P1*S;
-P1el = I1*I1*R;
-P0 = P1/EX;
-I0 = P0*S;
-P0el = I0*I0*R;
-
-OSNR = P1/(deltaN*PN);
-
-
-
-
-sigma1 = sqrt(var(signal_od + asease_od));
-sigma0 = sqrt(var(asease_od));
-
-Q = (P1el - P0el) / (sigma1 + sigma0);
-
-result = [OSNR, Q];
+OSNR = 10*log10(P1/(deltaN*PN));
+Q = (P1 - P0) / (sigma1 + sigma0);
