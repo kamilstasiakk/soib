@@ -17,12 +17,16 @@ noise = noise_fun(B);
 %noisySignal = signal + noise;
 %semilogy(B, noisySignal, '*'); 
 asease = conv(noise, noise);
-figure(1);
+figure(2);
 plot(asease);
 title('ase - ase');
+xlabel('czêstotliwoœæ'); 
+ylabel('Moc optyczna'); 
 signalase1 = conv(signal, noise);
-figure(2);
+figure(3);
 title('signal(1) - ase');
+xlabel('czêstotliwoœæ'); 
+ylabel('Moc optyczna'); 
 plot(signalase1)
 
 I1 = P1 * S;
@@ -32,3 +36,11 @@ I0 = P0 * S;
 P0el = I0*I0*R;
 
 OSNR = P1/deltaN*PN;
+
+%rysowanie
+%sygna³ + szum
+figure(1);
+title('sygna³ + szum ASE');
+semilogy(B, signal, B, noise);
+xlabel('czêstotliwoœæ'); 
+ylabel('Moc optyczna'); 
